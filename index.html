@@ -69,19 +69,31 @@
             background: rgba(255, 255, 255, 0.9);
             padding: 35px;
             border-radius: 25px;
-            max-width: 80%;
-            width: 600px;
+            max-width: 85%;
+            width: 650px;
             box-shadow: 0 15px 35px rgba(0,0,0,0.1);
-            line-height: 1.7;
-            font-size: 1.25rem;
+            line-height: 1.8;
+            font-size: 1.3rem;
             margin: 20px;
-            min-height: 300px; /* რომ სიმაღლე არ შეიცვალოს ბეჭდვისას */
+            min-height: 400px;
             display: flex;
             align-items: center;
             justify-content: center;
         }
         #typed-text {
-            white-space: pre-wrap; /* ხაზების გადატანისთვის */
+            white-space: pre-wrap;
+        }
+        /* კურსორის ანიმაცია */
+        .cursor {
+            display: inline-block;
+            width: 3px;
+            background-color: #d81b60;
+            margin-left: 2px;
+            animation: blink 0.7s infinite;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -100,9 +112,8 @@
     </div>
 
     <script>
-        const fullText = "ჩემო პატარა პრინცესა ჩემო, ჩემო გულო, ჩემო სულო, ჩემო ბედნიერებავ ვერ აგიღწერ რა ძლიერ მიყვარხარ. \n\nსიტყვებით ვერ გადმოვცემ როგორი ბედნიერი ვარ შენს გვერდით. მინდა ჩემი ცხოვრების ყოველ წამს შენს გვერდით ვატარებდე, მინდა ყოველი დილა ყოველი ღამე ყოველი დღე ყოველი წუთი წამი თ საათი შენ მოგიძღვნა. \n\nმინდა ჩემს გვერდით ყველაზე ბედნიერი ქალი იყო. ყველაფერი გამოგვივა ცხოვრება ყველაფერი უზომოთ მიყვარხარ და სულ მალე ჩვენი ბუდე გვექნება ჩვენი ოჯახი და ჩვენი პატარა დრაკონები მიყვარხარ ❤️";
+        const fullText = "ჩემო პატარა პრინცესა ჩემო, ჩემო გულო, ჩემო სულო, ჩემო ბედნიერებავ ვერ აგიღწერ რა ძლიერ მიყვარხარ. \n\nსიტყვებით ვერ გადმოვცემ როგორი ბედნიერი ვარ შენს გვერდით. მინდა ჩემი ცხოვრების ყოველ წამს შენს გვერდით ვატარებდე, მინდა ყოველი დილა ყოველი ღამე ყოველი დღე ყოველი წუთი წამი თუ საათი შენ მოგიძღვნა. \n\nმინდა ჩემს გვერდით ყველაზე ბედნიერი ქალი იყო. ყველაფერი გამოგვივა ცხოვრება ყველაფერი უზომოთ მიყვარხარ და სულ მალე ჩვენი ბუდე გვექნება ჩვენი ოჯახი და ჩვენი პატარა დრაკონები მიყვარხარ ❤️";
 
-        // გულების გენერაცია ფონზე
         function createHeart() {
             const heart = document.createElement('div');
             heart.classList.add('heart');
@@ -116,21 +127,27 @@
         }
         setInterval(createHeart, 300);
 
-        // საბეჭდი მანქანის ეფექტის ფუნქცია
-        function typeWriter(text, i, fnCallback) {
+        function typeWriter(text, i) {
             if (i < text.length) {
-                document.getElementById("typed-text").innerHTML = text.substring(0, i + 1) + '<span aria-hidden="true">|</span>';
+                // ტექსტის აკრეფა
+                document.getElementById("typed-text").innerText = text.substring(0, i + 1);
+                // კურსორის დამატება ბოლოში
+                const cursor = document.createElement('span');
+                cursor.className = 'cursor';
+                cursor.innerHTML = '&nbsp;';
+                document.getElementById("typed-text").appendChild(cursor);
+
                 setTimeout(function() {
-                    typeWriter(text, i + 1, fnCallback)
-                }, 50); // აქ შეგიძლიათ შეცვალოთ ბეჭდვის სიჩქარე (50 არის ოპტიმალური)
-            } else if (typeof fnCallback == 'function') {
-                document.getElementById("typed-text").innerHTML = text; // ბოლოში კურსორის წაშლა
-                setTimeout(fnCallback, 700);
+                    typeWriter(text, i + 1)
+                }, 100); // სიჩქარე ახლა არის 100მს (უფრო ნელი)
+            } else {
+                // ბოლოს კურსორი რომ დარჩეს ან გაქრეს
+                const finalCursor = document.querySelector('.cursor');
+                if(finalCursor) finalCursor.remove();
             }
         }
 
         function startSurprise() {
-            // პირველი გვერდის გაქრობა
             document.getElementById('page1').style.opacity = '0';
             
             setTimeout(() => {
@@ -139,41 +156,4 @@
                 page2.style.opacity = '1';
                 page2.style.pointerEvents = 'auto';
                 
-                // ფეიერვერკების ეფექტი
                 fireworks();
-                
-                // ტექსტის ბეჭდვის დაწყება
-                setTimeout(() => {
-                    typeWriter(fullText, 0);
-                }, 500);
-            }, 1000);
-        }
-
-        function fireworks() {
-            var end = Date.now() + (10 * 1000); // 10 წამი ფეიერვერკი
-            var colors = ['#ff4081', '#ffffff', '#ff1493'];
-
-            (function frame() {
-                confetti({
-                    particleCount: 3,
-                    angle: 60,
-                    spread: 55,
-                    origin: { x: 0 },
-                    colors: colors
-                });
-                confetti({
-                    particleCount: 3,
-                    angle: 120,
-                    spread: 55,
-                    origin: { x: 1 },
-                    colors: colors
-                });
-
-                if (Date.now() < end) {
-                    requestAnimationFrame(frame);
-                }
-            }());
-        }
-    </script>
-</body>
-</html>
